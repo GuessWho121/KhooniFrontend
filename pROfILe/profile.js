@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
     if (!userId) {
       // Redirect to login if user is not logged in
-      window.location.href = "/sign.html"
+      window.location.href = "/index.html"
       return
     }
   
@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchProfileData(userId)
   
     // Handle logout
-    const logoutLink = document.querySelector('a[href="../lOgIn/sign.html"]')
+    const logoutLink = document.querySelector('a[href="../index.html"]')
     if (logoutLink) {
       logoutLink.addEventListener("click", (e) => {
         e.preventDefault()
@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.removeItem("user_name")
   
         // Redirect to login page
-        window.location.href = "/sign.html"
+        window.location.href = "../index.html"
       })
     }
   })

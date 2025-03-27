@@ -47,6 +47,49 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   
   function updateDashboardUI(data) {
+    // Update user-specific information if needed
+    // For example, we could personalize the greeting or show donor-specific content
+  
+    // Personalize the download form if user data is available
+    const emailField = document.getElementById("email")
+    if (emailField && data.user && data.user.email) {
+      emailField.value = data.user.email
+    }
+  
+    // If we have the user's name, we could split it into first and last name
+    if (data.user && data.user.name) {
+      const nameParts = data.user.name.split(" ")
+      const firstName = document.getElementById("first-name")
+      const lastName = document.getElementById("last-name")
+  
+      if (firstName && nameParts.length > 0) {
+        firstName.value = nameParts[0]
+      }
+  
+      if (lastName && nameParts.length > 1) {
+        lastName.value = nameParts.slice(1).join(" ")
+      }
+    }
+  
+    // We could also show/hide elements based on whether the user is a donor or recipient
+    if (data.is_donor) {
+      // Show donor-specific content
+      const donorElements = document.querySelectorAll(".donor-only")
+      donorElements.forEach((el) => (el.style.display = "block"))
+  
+      // Hide recipient-specific content
+      const recipientElements = document.querySelectorAll(".recipient-only")
+      recipientElements.forEach((el) => (el.style.display = "none"))
+    } else if (data.is_receiver) {
+      // Show recipient-specific content
+      const recipientElements = document.querySelectorAll(".recipient-only")
+      recipientElements.forEach((el) => (el.style.display = "block"))
+  
+      // Hide donor-specific content
+      const donorElements = document.querySelectorAll(".donor-only")
+      donorElements.forEach((el) => (el.style.display = "none"))
+    }
+  
     // Update welcome message
     const welcomeElement = document.querySelector(".welcome h1")
     if (welcomeElement) {
