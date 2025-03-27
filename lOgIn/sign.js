@@ -27,7 +27,7 @@ document.querySelector(".sign-up form").addEventListener("submit", async functio
 
     try {
         // Step 1: Check if user already exists
-        const checkResponse = await fetch(`http://127.0.0.1:8000/user_exists?email=${encodeURIComponent(email)}`);
+        const checkResponse = await fetch(`http://156.67.110.227:15141//user_exists?email=${encodeURIComponent(email)}`);
         const checkData = await checkResponse.json();
 
         if (checkResponse.ok && checkData.exists) {
@@ -36,7 +36,7 @@ document.querySelector(".sign-up form").addEventListener("submit", async functio
         }
 
         // Step 2: Register User (Only if email is unique)
-        const response = await fetch("http://127.0.0.1:8000/register", {
+        const response = await fetch("http://156.67.110.227:15141/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name, email, password }) // Send only essential user data
@@ -77,7 +77,7 @@ document.querySelector(".sign-in button").addEventListener("click", async functi
 
     try {
         // Step 1: Check if user exists
-        const checkResponse = await fetch(`http://127.0.0.1:8000/user_exists?email=${encodeURIComponent(email)}`);
+        const checkResponse = await fetch(`http://156.67.110.227:15141/user_exists?email=${encodeURIComponent(email)}`);
         const checkData = await checkResponse.json();
 
         if (!checkResponse.ok || !checkData.exists) {
@@ -86,7 +86,7 @@ document.querySelector(".sign-in button").addEventListener("click", async functi
         }
 
         // Step 2: Log in the user
-        const response = await fetch("http://127.0.0.1:8000/login", {
+        const response = await fetch("http://156.67.110.227:15141/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
