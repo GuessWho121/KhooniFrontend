@@ -1,109 +1,127 @@
-const container = document.getElementById('container');
-const registerBtn = document.getElementById('register');
-const loginBtn = document.getElementById('login');
+document.addEventListener('DOMContentLoaded', () => {
+    // Animation Toggle
+    const container = document.getElementById('container');
+    const registerBtn = document.getElementById('register');
+    const loginBtn = document.getElementById('login');
 
-registerBtn.addEventListener('click', () => {
-    container.classList.add("active");
-});
+    registerBtn.addEventListener('click', () => {
+        container.classList.add("active");
+    });
 
-loginBtn.addEventListener('click', () => {
-    container.classList.remove("active");
-});
+    loginBtn.addEventListener('click', () => {
+        container.classList.remove("active");
+    });
 
-//Registeration
-document.querySelector(".sign-up form").addEventListener("submit", async function(event) {
-    event.preventDefault(); // Prevent page reload
+    // Registration Handler
+    document.querySelector(".sign-up form").addEventListener("submit", async (event) => {
+        event.preventDefault();
 
-    // Get form values
-    const name = document.querySelector(".sign-up input[placeholder='Name']").value;
-    const email = document.querySelector(".sign-up input[placeholder='Email']").value;
-    const password = document.querySelector(".sign-up input[placeholder='Password']").value;
-    const userType = document.querySelector(".sign-up input[name='userType']:checked")?.value;
+        const formData = {
+            name: document.querySelector(".sign-up input[placeholder='Name']").value.trim(),
+            email: document.querySelector(".sign-up input[placeholder='Email']").value.trim(),
+            password: document.querySelector(".sign-up input[placeholder='Password']").value.trim(),
+            phone: document.querySelector(".sign-up input[placeholder='Phone Number']").value.trim().replace(/\D/g, ''), // Remove non-digits
+            blood_type: document.querySelector(".sign-up input[placeholder='Blood Type']").value.toUpperCase().trim(),
+            userType: document.querySelector(".sign-up input[name='userType']:checked")?.value
+        };
 
-    if (!userType) {
-        alert("Please select if you are a Donor or Recipient.");
-        return;
-    }
-
-    try {
-        // Step 1: Check if user already exists
-        const checkResponse = await fetch(`http://156.67.110.227:15141//user_exists?email=${encodeURIComponent(email)}`);
-        const checkData = await checkResponse.json();
-
-        if (checkResponse.ok && checkData.exists) {
-            alert("User with this email already exists. Please use a different email.");
+        // Validations
+        if (!formData.userType) {
+            alert("Please select Donor or Recipient");
             return;
         }
 
-        // Step 2: Register User (Only if email is unique)
-        const response = await fetch("http://156.67.110.227:15141/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password }) // Send only essential user data
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.detail || "Registration failed");
-        }
-
-        alert("User registered successfully!");
-
-        // Redirect to the appropriate form based on userType
-        const redirectURL = userType === "donor"
-            ? `../SETUPDONOR/set.html?email=${encodeURIComponent(email)}`
-            : `../SETUPEME/setupr.html?email=${encodeURIComponent(email)}`;
-
-        window.location.href = redirectURL;
-        
-    } catch (error) {
-        alert("Error: " + error.message);
-    }
-});
-
-//login
-document.querySelector(".sign-in button").addEventListener("click", async function(event) {
-    event.preventDefault(); // Prevent page reload
-
-    // Get form values
-    const email = document.querySelector(".sign-in input[placeholder='Email']").value;
-    const password = document.querySelector(".sign-in input[placeholder='Password']").value;
-
-    if (!email || !password) {
-        alert("Please enter both email and password.");
-        return;
-    }
-
-    try {
-        // Step 1: Check if user exists
-        const checkResponse = await fetch(`http://156.67.110.227:15141/user_exists?email=${encodeURIComponent(email)}`);
-        const checkData = await checkResponse.json();
-
-        if (!checkResponse.ok || !checkData.exists) {
-            alert("No account found with this email. Please register first.");
+        if (!/^\d{10}$/.test(formData.phone)) {
+            alert("Phone must be 10 digits");
             return;
         }
 
-        // Step 2: Log in the user
-        const response = await fetch("http://156.67.110.227:15141/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.detail || "Invalid email or password.");
+        if (!/^(A|B|AB|O)[+-]$/.test(formData.blood_type)) {
+            alert("Invalid blood type (e.g., A+, O-)");
+            return;
+        }    
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            alert("Invalid email format");
+            return;
         }
 
-        alert("Login successful!");
+        try {
+            console.log("Final Registration Data:", {
+                name: formData.name,
+                email: formData.email,
+                password: formData.password,
+                phone: formData.phone,
+                blood_type: formData.blood_type
+            });
 
-        // Step 3: Redirect to main dashboard
-        window.location.href = "../dasHbOArd/db.html?email=" + encodeURIComponent(email);
-        
-    } catch (error) {
-        alert("Error: " + error.message);
-    }
+            // Remove userType from payload
+            const { userType, ...registrationData } = formData;
+
+            // Check existing user
+            const checkResponse = await fetch(`http://156.67.110.227:15141/user_exists?email=${encodeURIComponent(formData.email)}`);
+            if (!checkResponse.ok) throw new Error("Server error");
+
+            const checkData = await checkResponse.json();
+            if (checkData.exists) {
+                alert("User with this email already exists.");
+                return;
+            }
+
+            // Send registration request
+            const response = await fetch("http://156.67.110.227:15141/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(registrationData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Backend Error Details:", errorData);
+                const errorMessage = errorData.detail?.[0]?.msg || errorData.detail || "Registration failed";
+                throw new Error(errorMessage);
+            }
+            sessionStorage.setItem('username', formData.name);
+            // Redirect based on userType
+            const redirectURL = formData.userType === "donor"
+                ? `../SETUPDONOR/set.html?email=${encodeURIComponent(formData.email)}`
+                : `../SETUPEME/setupr.html?email=${encodeURIComponent(formData.email)}`;
+
+            window.location.href = redirectURL;
+
+        } catch (error) {
+            alert(`Error:\n${error.message}`);
+            console.error("Registration error:", error);
+        }
+    });
+
+    // Login Handler
+    document.querySelector(".sign-in form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const credentials = {
+            email: document.querySelector(".sign-in input[placeholder='Email']").value.trim(),
+            password: document.querySelector(".sign-in input[placeholder='Password']").value.trim()
+        };
+
+        try {
+            const response = await fetch("http://156.67.110.227:15141/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(credentials)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                const errorMessage = errorData.detail || "Invalid email or password";
+                throw new Error(errorMessage);
+            }
+            
+            sessionStorage.setItem('username', response.username);
+            window.location.href = `../dasHbOArd/db.html?email=${encodeURIComponent(credentials.email)}`;
+
+        } catch (error) {
+            alert(`Error: ${error.message}`);
+            console.error("Login error:", error);
+        }
+    });
 });
